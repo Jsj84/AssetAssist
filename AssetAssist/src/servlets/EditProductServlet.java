@@ -10,8 +10,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import core.Product;
+import core.UserAccount;
 import sqlutils.DBUtils;
 import sqlutils.MyUtils;
 
@@ -27,7 +29,11 @@ public class EditProductServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		Connection conn = MyUtils.getStoredConnection(request);
+
+		HttpSession session = request.getSession();
+		UserAccount user = MyUtils.getLoginedUser(session);
 
 		String code = request.getParameter("asset_id");
 
@@ -42,9 +48,6 @@ public class EditProductServlet extends HttpServlet {
 			errorString = e.getMessage();
 		}
 
-		// If no error.
-		// The product does not exist to edit.
-		// Redirect to productList page.
 		if (errorString != null && product == null) {
 			response.sendRedirect(request.getServletPath() + "/productList");
 			return;
@@ -53,9 +56,10 @@ public class EditProductServlet extends HttpServlet {
 		// Store errorString in request attribute, before forward to views.
 		request.setAttribute("errorString", errorString);
 		request.setAttribute("product", product);
+		request.setAttribute("user", user);
+		request.setAttribute("page", "editPrdoductView.jsp");
 
-		RequestDispatcher dispatcher = request.getServletContext()
-				.getRequestDispatcher("/WEB-INF/views/editProductView.jsp");
+		RequestDispatcher dispatcher = request.getServletContext().getRequestDispatcher("/WEB-INF/views/index.jsp");
 		dispatcher.forward(request, response);
 
 	}
@@ -65,12 +69,17 @@ public class EditProductServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+
 		Connection conn = MyUtils.getStoredConnection(request);
 
 		String asset_id = request.getParameter("asset_id");
 		String name = request.getParameter("name");
 		String priceStr = request.getParameter("price");
 		float price = 0;
+
+		HttpSession session = request.getSession();
+		UserAccount user = MyUtils.getLoginedUser(session);
+
 		try {
 			price = Float.parseFloat(priceStr);
 		} catch (Exception e) {
@@ -85,21 +94,23 @@ public class EditProductServlet extends HttpServlet {
 			e.printStackTrace();
 			errorString = e.getMessage();
 		}
-		// Store infomation to request attribute, before forward to views.
-		request.setAttribute("errorString", errorString);
-		request.setAttribute("product", product);
 
 		// If error, forward to Edit page.
 		if (errorString != null) {
-			RequestDispatcher dispatcher = request.getServletContext()
-					.getRequestDispatcher("/WEB-INF/views/editProductView.jsp");
-			dispatcher.forward(request, response);
+			request.setAttribute("page", "editProductView.jsp");
+			request.setAttribute("errorString", errorString);
 		}
-		// If everything nice.
-		// Redirect to the product listing page.
+
 		else {
-			response.sendRedirect(request.getContextPath() + "/productList");
+			request.setAttribute("errorString", errorString);
+			request.setAttribute("page", "productListView.jsp");
 		}
+
+		request.setAttribute("product", product);
+		request.setAttribute("user", user);
+
+		RequestDispatcher dispatcher = request.getServletContext().getRequestDispatcher("/WEB-INF/views/index.jsp");
+		dispatcher.forward(request, response);
 	}
 
 }

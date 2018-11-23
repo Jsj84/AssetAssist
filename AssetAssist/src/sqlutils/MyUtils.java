@@ -32,10 +32,6 @@ public class MyUtils {
 		session.setAttribute("loginedUser", loginedUser);
 	}
 
-	public static void deleteLoginedUser(HttpSession session) {
-		session.removeAttribute("loginedUser");
-	}
-
 	// Get the user information stored in the session.
 	public static UserAccount getLoginedUser(HttpSession session) {
 		UserAccount loginedUser = (UserAccount) session.getAttribute("loginedUser");
@@ -64,7 +60,6 @@ public class MyUtils {
 	public static void deleteUserCookie(HttpServletResponse response, UserAccount user) {
 		Cookie cookieUserName = new Cookie(ATT_NAME_USER_NAME, user.getUserName());
 		cookieUserName.setMaxAge(0);
-		response.addCookie(cookieUserName);
 	}
 
 }

@@ -1,15 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link
-	href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css"
+	href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css"
 	rel="stylesheet" id="bootstrap-css">
-<!-- <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<!-- <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>  -->
+<!-- <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
+<!--  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>  -->
 <title>Login</title>
 
 <style type="text/css">
-/*  @import "compass/css3"; */
 body {
 	padding: 50px;
 }
@@ -50,24 +53,29 @@ body {
 				<form role="form" method="POST"
 					action="${pageContext.request.contextPath}/login">
 					<fieldset>
-						<div class="alert alert-${errorType}">
-							<strong>${errorType}</strong> ${errorString}
-						</div>
+						<div id="alertDiv" class="alert alert-${errorType} alert-dismissible" style="hidden">
+							<button type="button" class="close" data-dismiss="alert">&times;</button>
+							<strong>${errorType}!</strong> ${errorString}</div>
 						<h2>Please Sign In</h2>
 						<hr class="colorgraph">
 						<div class="form-group">
-							<input type="email" name="userName" id="email"
-								class="form-control input-lg" value="${userName}"
-								placeholder="Email Address">
+							<div class="input-group">
+								<span class="input-group-addon"><i
+									class="glyphicon glyphicon-envelope color-blue"></i></span> <input
+									id="email" name="userName" placeholder="email address"
+									class="form-control input-lg" value="${userName}" type="email">
+							</div>
 						</div>
+
 						<div class="form-group">
-							<input type="password" name="password" id="password"
-								class="form-control input-lg" value="${user.password}"
-								placeholder="Password">
+							<div class="input-group">
+								<span class="input-group-addon"><i
+									class="glyphicon glyphicon-lock"></i></span> <input type="password"
+									name="password" id="password" class="form-control input-lg"
+									placeholder="Password">
+							</div>
 						</div>
-						<span class="label-checkbox"> <label>Remember Me <input
-								type="checkbox" name="rememberMe" id="remember_me"
-								checked="checked"></label> <a
+						<span class="label-checkbox"> <label>Remember Me <input type="checkbox" name="rememberMe" id="rememberMe" checked="${checked}"/></label> <a
 							href="${pageContext.request.contextPath}/forgotPassword"
 							class="btn btn-link pull-right">Forgot Password?</a>
 						</span>
@@ -82,6 +90,9 @@ body {
 	</div>
 </body>
 <script> 
-   ${showAlert}
+ var alert = document.getElementByID("alertDiv");
+ if(${errorType} != null){
+	 alert.show()
+ }
    </script>
 </html>

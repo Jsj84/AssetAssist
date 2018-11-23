@@ -5,28 +5,31 @@
 <title>Product List</title>
 </head>
 <nav class="navbar navbar-expand-lg sticky-top bg-secondary">
-<form class="form-inline mr-2 my-lg-0">
-  	   <div class="col-auto">
-      <button type="button" id="newButton" class="btn btn-primary mr-2 my-sm-0">New</button>
-    </div>
-    <input class="form-control my-2 my-sm-0" id="myInput" type="search" placeholder="Search..">
-  	</form>
+	<form class="form-inline mr-2 my-lg-0">
+		<div class="col-auto">
+			<button type="button" id="newButton"
+				class="btn btn-primary mr-2 my-sm-0">New</button>
+		</div>
+		<input class="form-control my-2 my-sm-0" id="myInput" type="search"
+			placeholder="Search..">
+	</form>
 </nav>
-	<table class="table table-striped" id="myTable">
-		<thead>
-			<tr>
-				<th><img src="${pageContext.request.contextPath}/gearIcon.png" /></th>
-				<th><i class="fas fa-bars"></i> Asset ID  <div class="dropdown-menu"> </div></th>
-				<th><i class="fas fa-bars"></i> Description</th>
-				<th><i class="fas fa-bars"></i> Category</th>
-				<th><i class="fas fa-bars"></i> Price</th>
-				<th><i class="fas fa-bars"></i> Location</th>
-				<th><i class="fas fa-bars"></i> Serial Number</th>
-				<th><i class="fas fa-bars"></i> Model</th>
-				<th><i class="fas fa-bars"></i> Date</th>
-				<th><i class="fas fa-bars"></i> Worth</th>
-			</tr>
-		</thead>
+<table class="table table-striped" id="assetTable">
+	<thead>
+		<tr>
+			<th><img src="${pageContext.request.contextPath}/gearIcon.png" /></th>
+			<th><i class="fas fa-bars"></i>Asset ID</th>
+			<th><i class="fas fa-bars"></i>Description</th>
+			<th><i class="fas fa-bars"></i>Category</th>
+			<th><i class="fas fa-bars"></i>Price</th>
+			<th><i class="fas fa-bars"></i>Location</th>
+			<th><i class="fas fa-bars"></i>Serial Number</th>
+			<th><i class="fas fa-bars"></i>Model</th>
+			<th><i class="fas fa-bars"></i>Date</th>
+			<th><i class="fas fa-bars"></i>Worth</th>
+		</tr>
+	</thead>
+	<tbody id="assetTbody">
 		<c:forEach items="${productList}" var="product">
 			<tr>
 				<td>
@@ -42,12 +45,19 @@
 				<td class="alt">${product.serialNumber}</td>
 				<td class="alt">${product.model}</td>
 				<td class="alt">${product.datePurchased}</td>
-			    <td onload="worthLoad();">${product.depreciationVal}</td>
-				<td class="trash" onClick="deletes('${product.code}')"><img src="${pageContext.request.contextPath}/trash.png" /></td>
+				<td onload="worthLoad();">${product.depreciationVal}</td>
+				<td class="trash" onClick="deletes('${product.code}')"><img
+					src="${pageContext.request.contextPath}/trash.png" /></td>
 			</tr>
 		</c:forEach>
-	</table>
+	</tbody>
 
+</table>
+<script>
+	$(document).ready(function() {
+		$('#assetTable').DataTable();
+	});
+</script>
 <!-- Modal for expired Session -->
 <div class="modal fade" id="loggedIn" tabindex="-1" role="dialog"
 	aria-labelledby="" aria-hidden="true">
@@ -70,51 +80,59 @@
 		</div>
 	</div>
 </div>
+
 <script>
-document.getElementById("newButton").addEventListener("click", myFunction);
+	document.getElementById("newButton").addEventListener("click", myFunction);
 
-function myFunction() {
- window.location.replace('createProduct');
+	function myFunction() {
+		window.location.replace('createProduct');
 
-}
-		$(document).ready(function() {
-			$("#myInput").on("keyup", function() {
-		var value = $(this).val().toLowerCase();
-		$("#myTable tr:not(:first)").filter(function() {
-		$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-		});
-	});
-});
-		
-		$('input[type="checkbox"]').click(function () {
-			
-		});
-		
-		if (screen.width < 500) {
-			  
-			  $("body").addClass("nohover");
-			  $("td, th")
-			    .attr("tabindex", "1")
-			    .on("touchstart", function() {
-			      $(this).focus();
-			    });
-			  }
-
-	function deletes(code){
-	     var post = $.post("productList", {	
-				'assetCode' : code
+	}
+	$(document).ready(
+			function() {
+				$("#myInput").on(
+						"keyup",
+						function() {
+							var value = $(this).val().toLowerCase();
+							$("#assetTable tr:not(:first)").filter(
+									function() {
+										$(this).toggle(
+												$(this).text().toLowerCase()
+														.indexOf(value) > -1)
+									});
+						});
 			});
-	     post.done(function(response) {
-				if (response['errorMessage'] != undefined) {
-					BootstrapDialog.show({
-						type : BootstrapDialog.TYPE_WARNING,
-						title : 'Error',
-						message : 'There was an error deleting the Purchase Order\n\n' + response['errorMessage'],
-					});
-				} else {
-					window.location.replace("productList");
-				}
-	}); 
-		}
-	</script>
+
+	$('input[type="checkbox"]').click(function() {
+
+	});
+
+	if (screen.width < 500) {
+
+		$("body").addClass("nohover");
+		$("td, th").attr("tabindex", "1").on("touchstart", function() {
+			$(this).focus();
+		});
+	}
+
+	function deletes(code) {
+		var post = $.post("productList", {
+			'assetCode' : code
+		});
+		post
+				.done(function(response) {
+					if (response['errorMessage'] != undefined) {
+						BootstrapDialog
+								.show({
+									type : BootstrapDialog.TYPE_WARNING,
+									title : 'Error',
+									message : 'There was an error deleting the Purchase Order\n\n'
+											+ response['errorMessage'],
+								});
+					} else {
+						window.location.replace("productList");
+					}
+				});
+	}
+</script>
 

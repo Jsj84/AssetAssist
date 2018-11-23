@@ -27,9 +27,7 @@ import sqlutils.MyUtils;
 public class LoginServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
-
-	List<Product> p = new ArrayList<>();
-	Map<String, Integer> map = new HashMap<>();
+	static List<Product> p = new ArrayList<>();
 
 	public LoginServlet() {
 		super();
@@ -40,49 +38,39 @@ public class LoginServlet extends HttpServlet {
 			throws ServletException, IOException {
 
 		HttpSession session = request.getSession();
-		UserAccount loginedUser = MyUtils.getLoginedUser(session);
+		UserAccount loginedUser = (UserAccount) session.getAttribute("loginedUser");
+		String userName = MyUtils.getUserNameInCookie(request);
+
+		if (userName != null) {
+			request.setAttribute("userName", userName);
+			request.setAttribute("checked", "checked");
+		}
 
 		if (loginedUser != null) {
 			try {
 				Connection conn = MyUtils.getStoredConnection(request);
 				p = DBUtils.queryProduct(conn);
 
-				for (int i = 0; i < p.size(); i++) {
-					if (!map.containsKey(p.get(i).getCatagory())) {
-						map.put(p.get(i).getCatagory(), 1);
-					} else {
-						int temp = map.get(p.get(i).getCatagory()) + 1;
-						map.replace(p.get(i).getCatagory(), temp);
-					}
-				}
-
 				request.setAttribute("user", loginedUser);
 				request.setAttribute("productList", p);
 				request.setAttribute("database", p.size());
-				request.setAttribute("map", map);
+				request.setAttribute("map", listCount());
 				request.setAttribute("page", "homeView.jsp");
-
-				RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/index.jsp");
-				dispatcher.forward(request, response);
 
 			} catch (SQLException | ParseException e) {
 				e.printStackTrace();
 			}
+			session.setMaxInactiveInterval(5 * 60);
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/index.jsp");
+			dispatcher.forward(request, response);
 
 		} else {
-
-			String userName = MyUtils.getUserNameInCookie(request);
-			if (userName != null) {
-				request.setAttribute("userName", userName);
-			}
 			RequestDispatcher dispatcher = this.getServletContext()
 					.getRequestDispatcher("/WEB-INF/views/loginView.jsp");
 			dispatcher.forward(request, response);
 		}
 	}
 
-	// When the user enters userName & password, and click Submit.
-	// This method will be executed.
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -90,33 +78,34 @@ public class LoginServlet extends HttpServlet {
 		String userLogin = request.getParameter("userName");
 		String password = request.getParameter("password");
 		String rememberMeStr = request.getParameter("rememberMe");
-		boolean remember = "on".equals(rememberMeStr);
-
-		UserAccount user = null;
+		UserAccount user = new UserAccount();
 		boolean hasError = false;
 		String errorString = null;
 		String errorType = null;
+		HttpSession session = request.getSession();
 
-		if (userLogin == null || password == null || userLogin.length() == 0 || password.length() == 0) {
-			hasError = true;
-			errorType = "Warning";
+		String userName = MyUtils.getUserNameInCookie(request);
 
-			if (userLogin == null || userLogin.length() == 0) {
-				errorString = "Your user name is required";
-			} else if (password.length() == 0) {
-				errorString = "A password is required";
-			} else {
-				errorString = "Either your username or password is incorrect";
-			}
-		} else {
+		if (userLogin != null || password != null) {
+
 			Connection conn = MyUtils.getStoredConnection(request);
+
 			try {
 				// Find the user in the DB.
 				user = DBUtils.findUser(conn, userLogin);
 
+				if (rememberMeStr != null) {
+					MyUtils.storeUserCookie(response, user);
+					request.setAttribute("checked", "checked");
+				}
+				// Else delete cookie.
+				else {
+					MyUtils.deleteUserCookie(response, user);
+				}
+
 				if (user == null) {
 					hasError = true;
-					errorType = "Warning";
+					errorType = "danger";
 					errorString = "Sorry, we don't have a record of your account";
 				} else if (!Password.isExpectedPassword(password.toCharArray(), user.getSalt(), user.getPassword())) {
 					hasError = true;
@@ -129,74 +118,52 @@ public class LoginServlet extends HttpServlet {
 				e.printStackTrace();
 				errorString = e.getMessage();
 			}
-		}
 
-		// If error, forward to /WEB-INF/views/login.jsp
-		if (hasError) {
-			user = new UserAccount();
-			user.setUserName(userLogin);
-			// user.setPassword(Password.ge);
+			if (!hasError) {
+				MyUtils.storeLoginedUser(session, user);
+				try {
+					p = DBUtils.queryProduct(conn);
+					request.setAttribute("productList", p);
+					request.setAttribute("database", p.size());
+					request.setAttribute("map", listCount());
+					request.setAttribute("page", "homeView.jsp");
+					request.setAttribute("userName", userName);
+					request.setAttribute("user", user);
 
-			// Store information in request attribute, before forward.
-			request.setAttribute("errorString", errorString);
-			request.setAttribute("errorType", errorType);
-			request.setAttribute("showAlert",
-					" window.setTimeout(function() {\n" + "	    $(\".alert\").fadeTo(500, 0).slideUp(500, function(){\n"
-							+ "	        $(this).remove(); \n" + "	    });\n" + "	}, 4000);");
+					session.setMaxInactiveInterval(5 * 60);
+					RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/index.jsp");
+					dispatcher.forward(request, response);
 
-			request.setAttribute("user", user);
-
-			// Forward to /WEB-INF/views/login.jsp
-			RequestDispatcher dispatcher = this.getServletContext()
-					.getRequestDispatcher("/WEB-INF/views/loginView.jsp");
-			dispatcher.forward(request, response);
-		}
-		// If no error
-		// Store user information in Session
-		// And redirect to userInfo page.
-		else {
-
-			HttpSession session = request.getSession();
-			MyUtils.storeLoginedUser(session, user);
-			session.setMaxInactiveInterval(1800);
-
-			// If user checked "Remember me".
-			if (remember) {
-				MyUtils.storeUserCookie(response, user);
-			}
-			// Else delete cookie.
-			else {
-				MyUtils.deleteUserCookie(response, user);
-			}
-			List<Product> p = new ArrayList<>();
-
-			Connection conn = MyUtils.getStoredConnection(request);
-			try {
-				p = DBUtils.queryProduct(conn);
-			} catch (SQLException | ParseException e) {
-				System.out.println("Caught an error trying to load the product list ");
-				e.printStackTrace();
-			}
-
-			request.setAttribute("user", user);
-			request.setAttribute("productList", p);
-			request.setAttribute("database", p.size());
-
-			for (int i = 0; i < p.size(); i++) {
-				if (!map.containsKey(p.get(i).getCatagory())) {
-					map.put(p.get(i).getCatagory(), 1);
-				} else {
-					int temp = map.get(p.get(i).getCatagory()) + 1;
-					map.replace(p.get(i).getCatagory(), temp);
+				} catch (SQLException | ParseException e) {
+					System.out.println("Caught an error trying to load the product list ");
+					e.printStackTrace();
 				}
+
 			}
-			request.setAttribute("map", map);
-			request.setAttribute("page", "homeView.jsp");
-			session.setMaxInactiveInterval(1800);
+			if (hasError) {
+				// Store information in request attribute, before forward.
+				request.setAttribute("errorString", errorString);
+				request.setAttribute("errorType", errorType);
+				request.setAttribute("userName", userName);
 
-			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/index.jsp");
-			dispatcher.forward(request, response);
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/loginView.jsp");
+				dispatcher.forward(request, response);
+			}
 		}
+	}
 
+	private static Map<String, Integer> listCount() {
+
+		Map<String, Integer> map = new HashMap<>();
+
+		for (int i = 0; i < p.size(); i++) {
+			if (!map.containsKey(p.get(i).getCatagory())) {
+				map.put(p.get(i).getCatagory(), 1);
+			} else {
+				int temp = map.get(p.get(i).getCatagory()) + 1;
+				map.replace(p.get(i).getCatagory(), temp);
+			}
+		}
+		return map;
 	}
 }

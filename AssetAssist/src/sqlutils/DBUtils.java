@@ -15,7 +15,7 @@ public class DBUtils {
 
 	public static UserAccount findUser(Connection conn, String userName) throws Exception {
 
-		String sql = "Select a.User_Name, a.Password, a.salt, a.firstName, a.Token, a.Timestamp, a.Theme_Type, a.lastName, a.time_zone, a.phone_number, a.email_address, a.profile_picture from USER_ACCOUNT a where a.User_Name = ? ";
+		String sql = "Select a.User_Name, a.Password, a.salt, a.firstName, a.Token, a.Timestamp, a.theme_type, a.lastName, a.time_zone, a.phone_number, a.email_address, a.profile_picture from USER_ACCOUNT a where a.User_Name = ? ";
 
 		PreparedStatement pstm = conn.prepareStatement(sql);
 		pstm.setString(1, userName);
@@ -31,7 +31,7 @@ public class DBUtils {
 			String lastName = rs.getString("lastName");
 			String time_zone = rs.getString("time_zone");
 			String phoneNumber = rs.getString("phone_number");
-			String theme = rs.getString("Theme_Type") == null ? theme = "cosmo" : rs.getString("Theme_Type");
+			String theme = rs.getString("theme_type") == null ? theme = "cosmo" : rs.getString("theme_type");
 			String email = rs.getString("email_address");
 			byte[] profilePic = rs.getBytes("profile_picture") == null ? profilePic = "avatar.png".getBytes()
 					: rs.getBytes("profile_picture");
@@ -57,7 +57,7 @@ public class DBUtils {
 
 		List<UserAccount> users = new ArrayList<>();
 
-		String sql = "Select a.User_Name, a.Password, a.salt, a.firstName, a.Token, a.Timestamp, a.Theme_Type, a.lastName, a.time_zone, a.phone_number, a.email_address, a.profile_picture from USER_ACCOUNT a";
+		String sql = "Select a.User_Name, a.Password, a.salt, a.firstName, a.Token, a.Timestamp, a.theme_type, a.lastName, a.time_zone, a.phone_number, a.email_address, a.profile_picture from USER_ACCOUNT a";
 
 		PreparedStatement pstm = conn.prepareStatement(sql);
 
@@ -72,7 +72,7 @@ public class DBUtils {
 			String firstName = rs.getString("firstName");
 			String lastName = rs.getString("lastName");
 			String time_zone = rs.getString("time_zone");
-			String theme = rs.getString("Theme_Type") == null ? theme = "cosmo" : rs.getString("Theme_Type");
+			String theme = rs.getString("theme_type") == null ? theme = "cosmo" : rs.getString("theme_type");
 			String phoneNumber = rs.getString("phone_number");
 			String email = rs.getString("email_address");
 			byte[] profilePic = rs.getBytes("profile_picture") == null ? profilePic = "avatar.png".getBytes()
@@ -156,7 +156,7 @@ public class DBUtils {
 	}
 
 	public static void inserTheme(Connection conn, UserAccount account, String theme) throws SQLException {
-		String sql = "Update USER_ACCOUNT set Theme_Type =? where User_Name =? ";
+		String sql = "Update USER_ACCOUNT set theme_type =? where User_Name =? ";
 		PreparedStatement pstm = conn.prepareStatement(sql);
 		pstm.setString(1, theme);
 		pstm.setString(2, account.getUserName());

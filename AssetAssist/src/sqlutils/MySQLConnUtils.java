@@ -1,25 +1,58 @@
 package sqlutils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.SQLException;
+
+import org.apache.tomcat.jdbc.pool.DataSource;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 public class MySQLConnUtils {
 
-	public static Connection getMySQLConnection() throws Exception {
-		// Note: Change the connection parameters accordingly.
-		String hostName = "127.0.0.1"; // "aa113r1zv2dzzkx.ctu7qijg4l1w.us-east-2.rds.amazonaws.com"; // "127.0.0.1";
-		String dbName = "sys";
-		String userName = "root";
-		String password = "passport";
-		return getMySQLConnection(hostName, dbName, userName, password);
+	private static DataSource datasource = null;
+
+	static {
+		init();
 	}
 
-	public static Connection getMySQLConnection(String hostName, String dbName, String userName, String password)
-			throws Exception {
+	private static void init() {
+		String hostName = "aa1b0plcckesu6i.ctu7qijg4l1w.us-east-2.rds.amazonaws.com";
+		String dbName = "asset_assist";
+		String userName = "root";
+		String password = "passport";
+		String port = "3306";
 
-		Class.forName("com.mysql.jdbc.Driver");
-		String connectionURL = "jdbc:mysql://" + hostName + ":3306/" + dbName; // + "?";
-		Connection conn = DriverManager.getConnection(connectionURL, userName, password);
-		return conn;
+		String connectionURL = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName + "?user=" + userName
+				+ "&password=" + password + "&autoReconnect=true&useSSL=false";
+
+		PoolProperties p = new PoolProperties();
+		p.setUrl(connectionURL);
+		p.setDriverClassName("com.mysql.jdbc.Driver");
+		p.setUsername(userName);
+		p.setPassword(password);
+		p.setJmxEnabled(true);
+		p.setTestWhileIdle(false);
+		p.setTestOnBorrow(true);
+		p.setValidationQuery("SELECT 1");
+		p.setTestOnReturn(false);
+		p.setValidationInterval(30000);
+		p.setTimeBetweenEvictionRunsMillis(30000);
+		p.setMaxActive(100);
+		p.setInitialSize(10);
+		p.setMaxWait(10000);
+		p.setRemoveAbandonedTimeout(300);
+		p.setMinEvictableIdleTimeMillis(30000);
+		p.setMinIdle(10);
+		p.setLogAbandoned(true);
+		p.setRemoveAbandoned(true);
+		p.setJdbcInterceptors("org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
+				+ "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;"
+				+ "org.apache.tomcat.jdbc.pool.interceptor.ResetAbandonedTimer");
+
+		datasource = new DataSource();
+		datasource.setPoolProperties(p);
+	}
+
+	public static Connection getMySQLConnection() throws ClassNotFoundException, SQLException {
+		return datasource.getConnection();
 	}
 }

@@ -8,7 +8,7 @@
 </style>
 </head>
 	<div class="row">
-		  <div class="auto col-sm-6">
+		  <div class="col-lg">
 		        <!-- form user info -->
                    
 			<form class="needs-validation" novalidate id="myform" method="POST" action="${pageContext.request.contextPath}/createProduct">

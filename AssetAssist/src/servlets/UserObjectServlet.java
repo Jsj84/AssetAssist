@@ -67,6 +67,7 @@ public class UserObjectServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
+		String userName = request.getParameter("user_name");
 		String firstName = request.getParameter("firstName");
 		String lastName = request.getParameter("lastName");
 		String phone = request.getParameter("phone_number");
@@ -77,6 +78,7 @@ public class UserObjectServlet extends HttpServlet {
 		HttpSession session = request.getSession();
 		UserAccount user = MyUtils.getLoginedUser(session);
 
+		user.setUserName(userName);
 		user.setFirstName(firstName);
 		user.setLastName(lastName);
 		user.setPhone_number(phone);
